@@ -1,6 +1,4 @@
-'use client';
-
-import 'bootstrap-icons/font/bootstrap-icons.css';
+"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { TransactionList } from "@/components/TransactionList";
@@ -12,6 +10,7 @@ import { BudgetForm } from "@/components/BudgetForm";
 import { BudgetComparisonChart } from "@/components/BudgetComparisonChart";
 import { SpendingInsights } from "@/components/SpendingInsights";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +21,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ITransaction } from "@/models/Transaction";
 import { IBudget } from "@/models/Budget";
+import { PlusIcon, RotateCcw, BarChart4Icon, PieChartIcon, WalletIcon } from "lucide-react";
+import 'bootstrap-icons/font/bootstrap-icons.css';
 
 export default function Home() {
   const [transactions, setTransactions] = useState<ITransaction[]>([]);
@@ -32,6 +33,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [selectedMonth, setSelectedMonth] = useState((new Date().getMonth() + 1).toString());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [activeTab, setActiveTab] = useState("overview");
 
   const fetchTransactions = async () => {
     try {
@@ -76,171 +78,226 @@ export default function Home() {
   }, [selectedMonth, selectedYear, fetchBudgets]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto p-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Personal Finance Visualizer
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Track your expenses, set budgets, and visualize your spending patterns
-          </p>
-        </div>
-        
-        {/* Dashboard Summary Cards */}
-        <DashboardSummary 
-          transactions={transactions} 
-          icons={{
-            totalExpenses: 'bi-cash-stack',
-            thisMonth: 'bi-calendar-event',
-            averageTransaction: 'bi-calculator',
-            topCategory: 'bi-award'
-          }}
-        />
-        
-        {/* Budget Controls */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Budget Management
-            </h2>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Period:</label>
-                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 12 }, (_, i) => {
-                      const month = i + 1;
-                      const monthName = new Date(2024, i).toLocaleString('default', { month: 'long' });
-                      return (
-                        <SelectItem key={month} value={month.toString()}>
-                          {monthName}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-                <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
-                  <SelectTrigger className="w-24">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 5 }, (_, i) => {
-                      const year = new Date().getFullYear() - 2 + i;
-                      return (
-                        <SelectItem key={year} value={year.toString()}>
-                          {year}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Dialog open={isBudgetDialogOpen} onOpenChange={setIsBudgetDialogOpen}>
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header Section */}
+        <div className="mb-8 space-y-2">
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold">
+              Personal Finance Visualizer
+            </h1>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={fetchTransactions}
+                className="gap-1"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Refresh
+              </Button>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="outline">Manage Budgets</Button>
+                  <Button size="sm" className="gap-1">
+                    <PlusIcon className="h-4 w-4" />
+                    Add Transaction
+                  </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogContent className="sm:max-w-md">
                   <DialogHeader>
-                    <DialogTitle>Manage Budgets</DialogTitle>
+                    <DialogTitle>Add Transaction</DialogTitle>
                   </DialogHeader>
-                  <BudgetForm
+                  <TransactionForm
                     onSuccess={() => {
-                      fetchBudgets();
-                      setIsBudgetDialogOpen(false);
+                      fetchTransactions();
+                      setIsDialogOpen(false);
                     }}
                   />
                 </DialogContent>
               </Dialog>
             </div>
           </div>
+          <p className="text-muted-foreground">
+            Track your expenses, set budgets, and visualize your spending patterns
+          </p>
         </div>
         
-        {/* Budget vs Actual Comparison */}
-        <div className="mb-6">
-          <BudgetComparisonChart 
-            transactions={transactions} 
-            budgets={budgets}
-            selectedMonth={selectedMonth}
-            selectedYear={selectedYear}
-          />
-        </div>
-
-        {/* Spending Insights */}
-        <div className="mb-6">
-          <SpendingInsights 
-            transactions={transactions} 
-            budgets={budgets}
-            selectedMonth={selectedMonth}
-            selectedYear={selectedYear}
-            icons={{
-              trendingUp: 'bi-arrow-up-circle',
-              budgetPerformance: 'bi-exclamation-circle',
-              quickStats: 'bi-lightning-fill'
-            }}
-          />
+        {/* Main Navigation Tabs */}
+        <div className="mb-8 flex gap-2">
+          <Button variant={activeTab === "overview" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("overview")}>Overview</Button>
+          <Button variant={activeTab === "transactions" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("transactions")}>Transactions</Button>
+          <Button variant={activeTab === "analytics" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("analytics")}>Analytics</Button>
         </div>
         
-        <div className="grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  Transactions
-                </h2>
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button>Add Transaction</Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add Transaction</DialogTitle>
-                    </DialogHeader>
-                    <TransactionForm
-                      onSuccess={() => {
-                        fetchTransactions();
-                        setIsDialogOpen(false);
-                      }}
-                    />
-                  </DialogContent>
-                </Dialog>
-              </div>
-              
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-4">
-                  {error}
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={fetchTransactions}
-                    className="ml-2"
-                  >
-                    Retry
-                  </Button>
+        {activeTab === "overview" && (
+          <section className="space-y-6">
+            <DashboardSummary 
+              transactions={transactions} 
+              icons={{
+                totalExpenses: 'wallet',
+                thisMonth: 'calendar',
+                averageTransaction: 'calculator',
+                topCategory: 'award'
+              }}
+            />
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+                  <h2 className="text-xl font-semibold">
+                    Budget Management
+                  </h2>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-2">
+                      <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                        <SelectTrigger className="w-32">
+                          <SelectValue placeholder="Month" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 12 }, (_, i) => {
+                            const month = i + 1;
+                            const monthName = new Date(2024, i).toLocaleString('default', { month: 'long' });
+                            return (
+                              <SelectItem key={month} value={month.toString()}>
+                                {monthName}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                      <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
+                        <SelectTrigger className="w-24">
+                          <SelectValue placeholder="Year" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 5 }, (_, i) => {
+                            const year = new Date().getFullYear() - 2 + i;
+                            return (
+                              <SelectItem key={year} value={year.toString()}>
+                                {year}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Dialog open={isBudgetDialogOpen} onOpenChange={setIsBudgetDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline">Manage Budgets</Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Manage Budgets</DialogTitle>
+                        </DialogHeader>
+                        <BudgetForm
+                          onSuccess={() => {
+                            fetchBudgets();
+                            setIsBudgetDialogOpen(false);
+                          }}
+                        />
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </div>
-              )}
-              
-              {isLoading ? (
-                <div className="flex justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="text-xl font-semibold mb-4">Budget vs Actual</h2>
+                <BudgetComparisonChart 
+                  transactions={transactions} 
+                  budgets={budgets}
+                  selectedMonth={selectedMonth}
+                  selectedYear={selectedYear}
+                />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="text-xl font-semibold mb-4">Spending Insights</h2>
+                <SpendingInsights 
+                  transactions={transactions} 
+                  budgets={budgets}
+                  selectedMonth={selectedMonth}
+                  selectedYear={selectedYear}
+                  icons={{
+                    trendingUp: 'trending-up',
+                    budgetPerformance: 'alert-circle',
+                    quickStats: 'zap'
+                  }}
+                />
+              </CardContent>
+            </Card>
+          </section>
+        )}
+        
+        {activeTab === "transactions" && (
+          <section>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold">
+                    Transactions
+                  </h2>
+                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button>Add Transaction</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add Transaction</DialogTitle>
+                      </DialogHeader>
+                      <TransactionForm
+                        onSuccess={() => {
+                          fetchTransactions();
+                          setIsDialogOpen(false);
+                        }}
+                      />
+                    </DialogContent>
+                  </Dialog>
                 </div>
-              ) : (
+                {error && (
+                  <div className="bg-destructive/10 border border-destructive/30 text-destructive px-4 py-3 rounded-md mb-4 flex items-center justify-between">
+                    <span>{error}</span>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={fetchTransactions}
+                    >
+                      Retry
+                    </Button>
+                  </div>
+                )}
                 <TransactionList
                   transactions={transactions}
                   fetchTransactions={fetchTransactions}
                 />
-              )}
+              </CardContent>
+            </Card>
+          </section>
+        )}
+        
+        {activeTab === "analytics" && (
+          <section>
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card>
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-semibold mb-4">Monthly Expenses</h2>
+                  <div className="h-[350px]">
+                    <MonthlyExpensesChart data={transactions} />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-semibold mb-4">Spending by Category</h2>
+                  <div className="h-[350px]">
+                    <CategoryPieChart data={transactions} />
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </div>
-          
-          <div className="space-y-6">
-            <MonthlyExpensesChart data={transactions} />
-            <CategoryPieChart data={transactions} />
-          </div>
-        </div>
+          </section>
+        )}
       </div>
     </div>
   );
