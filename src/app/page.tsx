@@ -1,103 +1,247 @@
-import Image from "next/image";
+'use client';
+
+import 'bootstrap-icons/font/bootstrap-icons.css';
+
+import { useState, useEffect } from "react";
+import { TransactionList } from "@/components/TransactionList";
+import { TransactionForm } from "@/components/TransactionForm";
+import { MonthlyExpensesChart } from "@/components/MonthlyExpensesChart";
+import { CategoryPieChart } from "@/components/CategoryPieChart";
+import { DashboardSummary } from "@/components/DashboardSummary";
+import { BudgetForm } from "@/components/BudgetForm";
+import { BudgetComparisonChart } from "@/components/BudgetComparisonChart";
+import { SpendingInsights } from "@/components/SpendingInsights";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ITransaction } from "@/models/Transaction";
+import { IBudget } from "@/models/Budget";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [transactions, setTransactions] = useState<ITransaction[]>([]);
+  const [budgets, setBudgets] = useState<IBudget[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isBudgetDialogOpen, setIsBudgetDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState((new Date().getMonth() + 1).toString());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const fetchTransactions = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const res = await fetch("/api/transactions");
+      
+      if (!res.ok) {
+        throw new Error('Failed to fetch transactions');
+      }
+      
+      const { data } = await res.json();
+      setTransactions(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchBudgets = async () => {
+    try {
+      const res = await fetch(`/api/budgets?month=${selectedMonth}&year=${selectedYear}`);
+      
+      if (!res.ok) {
+        throw new Error('Failed to fetch budgets');
+      }
+      
+      const { data } = await res.json();
+      setBudgets(data);
+    } catch (err) {
+      console.error('Failed to fetch budgets:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchTransactions();
+  }, []);
+
+  useEffect(() => {
+    fetchBudgets();
+  }, [selectedMonth, selectedYear]);
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="container mx-auto p-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            Personal Finance Visualizer
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Track your expenses, set budgets, and visualize your spending patterns
+          </p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+        
+        {/* Dashboard Summary Cards */}
+        <DashboardSummary 
+          transactions={transactions} 
+          icons={{
+            totalExpenses: 'bi-cash-stack',
+            thisMonth: 'bi-calendar-event',
+            averageTransaction: 'bi-calculator',
+            topCategory: 'bi-award'
+          }}
+        />
+        
+        {/* Budget Controls */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              Budget Management
+            </h2>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Period:</label>
+                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 12 }, (_, i) => {
+                      const month = i + 1;
+                      const monthName = new Date(2024, i).toLocaleString('default', { month: 'long' });
+                      return (
+                        <SelectItem key={month} value={month.toString()}>
+                          {monthName}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+                <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
+                  <SelectTrigger className="w-24">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 5 }, (_, i) => {
+                      const year = new Date().getFullYear() - 2 + i;
+                      return (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Dialog open={isBudgetDialogOpen} onOpenChange={setIsBudgetDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline">Manage Budgets</Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Manage Budgets</DialogTitle>
+                  </DialogHeader>
+                  <BudgetForm
+                    onSuccess={() => {
+                      fetchBudgets();
+                      setIsBudgetDialogOpen(false);
+                    }}
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
+        </div>
+        
+        {/* Budget vs Actual Comparison */}
+        <div className="mb-6">
+          <BudgetComparisonChart 
+            transactions={transactions} 
+            budgets={budgets}
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
+        </div>
+
+        {/* Spending Insights */}
+        <div className="mb-6">
+          <SpendingInsights 
+            transactions={transactions} 
+            budgets={budgets}
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            icons={{
+              trendingUp: 'bi-arrow-up-circle',
+              budgetPerformance: 'bi-exclamation-circle',
+              quickStats: 'bi-lightning-fill'
+            }}
           />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        </div>
+        
+        <div className="grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Transactions
+                </h2>
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button>Add Transaction</Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add Transaction</DialogTitle>
+                    </DialogHeader>
+                    <TransactionForm
+                      onSuccess={() => {
+                        fetchTransactions();
+                        setIsDialogOpen(false);
+                      }}
+                    />
+                  </DialogContent>
+                </Dialog>
+              </div>
+              
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-4">
+                  {error}
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={fetchTransactions}
+                    className="ml-2"
+                  >
+                    Retry
+                  </Button>
+                </div>
+              )}
+              
+              {isLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : (
+                <TransactionList
+                  transactions={transactions}
+                  fetchTransactions={fetchTransactions}
+                />
+              )}
+            </div>
+          </div>
+          
+          <div className="space-y-6">
+            <MonthlyExpensesChart data={transactions} />
+            <CategoryPieChart data={transactions} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
