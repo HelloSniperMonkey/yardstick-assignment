@@ -1,4 +1,3 @@
-
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import Transaction from '@/models/Transaction';
@@ -8,7 +7,7 @@ export async function GET() {
   try {
     const transactions = await Transaction.find({}).sort({ date: -1 });
     return NextResponse.json({ success: true, data: transactions });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false }, { status: 400 });
   }
 }

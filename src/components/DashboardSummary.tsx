@@ -100,7 +100,7 @@ export function DashboardSummary({ transactions, icons }: DashboardSummaryProps)
         <CardContent>
           <div className="space-y-2">
             {topCategories.length > 0 ? (
-              topCategories.map(([category, amount], index) => (
+              topCategories.map(([category, amount]) => (
                 <div key={category} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span>{getCategoryIcon(category)}</span>

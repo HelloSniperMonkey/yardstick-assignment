@@ -14,7 +14,7 @@ import { categories } from '@/lib/categories';
 const formSchema = z.object({
   description: z.string().min(2, { message: 'Description must be at least 2 characters.' }),
   amount: z.coerce.number().positive({ message: 'Amount must be a positive number.' }),
-  date: z.string().refine((val: any) => !isNaN(Date.parse(val)), { message: 'Invalid date' }),
+  date: z.string().refine((val: string) => !isNaN(Date.parse(val)), { message: 'Invalid date' }),
   category: z.string().min(1, { message: 'Please select a category.' }),
 });
 
@@ -70,7 +70,7 @@ export function TransactionForm({ onSuccess, transaction }: TransactionFormProps
         <FormField
           control={form.control}
           name="description"
-          render={({ field }: any) => (
+          render={({ field }: { field: { onChange: (event: React.ChangeEvent<HTMLInputElement>) => void; value: string } }) => (
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
@@ -83,7 +83,7 @@ export function TransactionForm({ onSuccess, transaction }: TransactionFormProps
         <FormField
           control={form.control}
           name="amount"
-          render={({ field }: any) => (
+          render={({ field }: { field: { onChange: (event: React.ChangeEvent<HTMLInputElement>) => void; value: number } }) => (
             <FormItem>
               <FormLabel>Amount</FormLabel>
               <FormControl>
@@ -96,7 +96,7 @@ export function TransactionForm({ onSuccess, transaction }: TransactionFormProps
         <FormField
           control={form.control}
           name="category"
-          render={({ field }: any) => (
+          render={({ field }: { field: { onChange: (value: string) => void; value: string } }) => (
             <FormItem>
               <FormLabel>Category</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoading}>
@@ -123,7 +123,7 @@ export function TransactionForm({ onSuccess, transaction }: TransactionFormProps
         <FormField
           control={form.control}
           name="date"
-          render={({ field }: any) => (
+          render={({ field }: { field: { onChange: (event: React.ChangeEvent<HTMLInputElement>) => void; value: string } }) => (
             <FormItem>
               <FormLabel>Date</FormLabel>
               <FormControl>

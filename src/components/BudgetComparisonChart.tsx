@@ -12,7 +12,7 @@ interface BudgetComparisonData {
   budget: number;
   actual: number;
   percentage: number;
-  icon: string;
+  icon: React.ReactElement;
   color: string;
 }
 
@@ -72,24 +72,14 @@ export function BudgetComparisonChart({
     }
   });
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: { payload: BudgetComparisonData }[]; label?: string }) => {
     if (active && payload && payload.length) {
-      const data = comparisonData.find(item => item.category === label);
+      const data = payload[0].payload;
       return (
         <div className="bg-white dark:bg-gray-800 p-3 border rounded-lg shadow-lg">
           <p className="flex items-center gap-2 font-medium">
-            <span>{data?.icon}</span>
-            <span>{label}</span>
+            {data.category}
           </p>
-          <div className="space-y-1 text-sm">
-            <p className="text-blue-600">Budget: {formatCurrency(payload[0]?.value || 0)}</p>
-            <p className="text-green-600">Actual: {formatCurrency(payload[1]?.value || 0)}</p>
-            {data && data.budget > 0 && (
-              <p className={`${data.percentage > 100 ? 'text-red-600' : 'text-gray-600'}`}>
-                {data.percentage.toFixed(1)}% of budget
-              </p>
-            )}
-          </div>
         </div>
       );
     }

@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ITransaction } from '@/models/Transaction';
 import { IBudget } from '@/models/Budget';
-import { getCategoryIcon, getCategoryColor } from '@/lib/categories';
+import { getCategoryIcon } from '@/lib/categories';
 import { formatCurrency } from '@/lib/currency';
 
 interface SpendingInsightsProps {
@@ -86,19 +86,6 @@ export function SpendingInsights({
   // Calculate average transaction amount
   const avgTransaction = currentMonthTransactions.length > 0 ? 
     currentTotal / currentMonthTransactions.length : 0;
-
-  // Find spending trends
-  const trendingUp = Object.keys(currentSpending).filter(category => {
-    const current = currentSpending[category] || 0;
-    const previous = prevSpending[category] || 0;
-    return current > previous * 1.2; // 20% increase
-  });
-
-  const trendingDown = Object.keys(currentSpending).filter(category => {
-    const current = currentSpending[category] || 0;
-    const previous = prevSpending[category] || 0;
-    return previous > 0 && current < previous * 0.8; // 20% decrease
-  });
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',

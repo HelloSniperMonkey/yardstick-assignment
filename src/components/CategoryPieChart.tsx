@@ -10,7 +10,7 @@ interface CategoryData {
   name: string;
   value: number;
   color: string;
-  icon: string;
+  icon: React.ReactElement;
 }
 
 interface CategoryPieChartProps {
@@ -33,7 +33,7 @@ export function CategoryPieChart({ data }: CategoryPieChartProps) {
     return acc;
   }, []);
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: { payload: CategoryData }[] }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
@@ -51,16 +51,15 @@ export function CategoryPieChart({ data }: CategoryPieChartProps) {
     return null;
   };
 
-  const CustomLegend = ({ payload }: any) => {
+  const CustomLegend = ({ payload }: { payload?: { value: string; color: string }[] }) => {
     return (
       <div className="flex flex-wrap gap-2 justify-center mt-4">
-        {payload?.map((entry: any, index: number) => (
+        {payload?.map((entry, index) => (
           <div key={index} className="flex items-center gap-1 text-sm">
             <div
               className="w-3 h-3 rounded-full"
               style={{ backgroundColor: entry.color }}
-            />
-            <span>{entry.payload.icon}</span>
+            ></div>
             <span>{entry.value}</span>
           </div>
         ))}

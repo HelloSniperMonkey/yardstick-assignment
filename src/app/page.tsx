@@ -2,7 +2,7 @@
 
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { TransactionList } from "@/components/TransactionList";
 import { TransactionForm } from "@/components/TransactionForm";
 import { MonthlyExpensesChart } from "@/components/MonthlyExpensesChart";
@@ -52,7 +52,7 @@ export default function Home() {
     }
   };
 
-  const fetchBudgets = async () => {
+  const fetchBudgets = useCallback(async () => {
     try {
       const res = await fetch(`/api/budgets?month=${selectedMonth}&year=${selectedYear}`);
       
@@ -65,7 +65,7 @@ export default function Home() {
     } catch (err) {
       console.error('Failed to fetch budgets:', err);
     }
-  };
+  }, [selectedMonth, selectedYear]);
 
   useEffect(() => {
     fetchTransactions();
@@ -73,7 +73,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchBudgets();
-  }, [selectedMonth, selectedYear]);
+  }, [selectedMonth, selectedYear, fetchBudgets]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">

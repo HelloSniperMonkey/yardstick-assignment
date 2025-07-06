@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -39,7 +39,7 @@ export function BudgetForm({ onSuccess }: BudgetFormProps) {
     },
   });
 
-  const fetchBudgets = async () => {
+  const fetchBudgets = useCallback(async () => {
     try {
       const month = form.getValues('month');
       const year = form.getValues('year');
@@ -49,11 +49,11 @@ export function BudgetForm({ onSuccess }: BudgetFormProps) {
     } catch (err) {
       console.error('Failed to fetch budgets:', err);
     }
-  };
+  }, [form]);
 
   useEffect(() => {
     fetchBudgets();
-  }, []);
+  }, [fetchBudgets]);
 
   const watchMonth = form.watch('month');
   const watchYear = form.watch('year');
@@ -62,7 +62,7 @@ export function BudgetForm({ onSuccess }: BudgetFormProps) {
     if (watchMonth && watchYear) {
       fetchBudgets();
     }
-  }, [watchMonth, watchYear]);
+  }, [watchMonth, watchYear, fetchBudgets]);
 
   async function onSubmit(values: z.infer<typeof budgetSchema>) {
     setIsLoading(true);
