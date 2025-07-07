@@ -21,7 +21,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ITransaction } from "@/models/Transaction";
 import { IBudget } from "@/models/Budget";
-import { PlusIcon, RotateCcw, BarChart4Icon, PieChartIcon, WalletIcon } from "lucide-react";
+import { PlusIcon, RotateCcw } from "lucide-react";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
 export default function Home() {
@@ -29,7 +29,6 @@ export default function Home() {
   const [budgets, setBudgets] = useState<IBudget[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isBudgetDialogOpen, setIsBudgetDialogOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedMonth, setSelectedMonth] = useState((new Date().getMonth() + 1).toString());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -37,7 +36,6 @@ export default function Home() {
 
   const fetchTransactions = async () => {
     try {
-      setIsLoading(true);
       setError(null);
       const res = await fetch("/api/transactions");
       
@@ -49,8 +47,6 @@ export default function Home() {
       setTransactions(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsLoading(false);
     }
   };
 
