@@ -66,7 +66,7 @@ A modern, responsive web application for tracking personal finances built with N
    ```
    Edit `.env.local` and add your MongoDB connection string:
    ```
-   MONGODB_URI=mongodb+srv://<username>:<password>@<cluster-url>/personal-finance?retryWrites=true&w=majority
+   MONGODB_URI=mongodb+srv://<username>:<password>@<cluster-url>/personal-finance?retryWrites=true
    ```
 
 4. **Run the development server**
